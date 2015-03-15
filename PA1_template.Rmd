@@ -7,19 +7,108 @@ output:
 
 
 ## Loading and preprocessing the data
-
-
-
+```{r readdata}
+doc <- read.csv(unzip("activity.zip"))
+```
+```{r preprocess}
+library(dplyr)
+library(ggplot2)
+library(scales)
+for(i in 1:length(doc$interval)){
+    if(nchar(doc$interval[i])==1) {doc$interval[i]<-paste0("000",doc$interval[i])}
+    if(nchar(doc$interval[i])==2) {doc$interval[i]<-paste0("00",doc$interval[i])}
+    if(nchar(doc$interval[i])==3) {doc$interval[i]<-paste0("0",doc$interval[i])}
+}
+work_data <- doc
+work_data <- mutate(.data = work_data, 
+                    date = as.POSIXct(paste0(doc$date, doc$interval), format = "%Y-%m-%d%H%M"))
+work_data$date <- as.POSIXlt(work_data$date)
+work_data <- select(.data = work_data, steps, date)
+```
 ## What is mean total number of steps taken per day?
+```{r computemean}
+days <- as.factor(as.character(trunc(work_data$date, "days")))
+total_steps_per_day <- tapply(X = work_data$steps, 
+                              INDEX = days, 
+                              FUN = sum,
+                              na.rm = TRUE) 
+```
 
+```{r histogram}
+qplot(x = total_steps_per_day, binwidth = 500, xlab = "Total steps per day")
+```
 
+```{r report}
+steps_mean <- as.character(mean(total_steps_per_day))
+steps_median <- median(total_steps_per_day)
+```
+
+Mean of steps is `r steps_mean` and median of steps is `r steps_median`.
 
 ## What is the average daily activity pattern?
+```{r time_series_plot}
+average_over_days_matrix <- tapply(X = work_data$steps,
+                            INDEX = list(as.factor(work_data$date$hour),
+                                         as.factor(work_data$date$min)),
+                            FUN = mean,
+                            na.rm = TRUE)
+average_over_days_matrix <- t(average_over_days_matrix)
+average_over_days < - average_over_days_matrix
+dim(average_over_days) <- NULL
+intervals <- as.POSIXct(paste0(work_data$date$hour,"-", work_data$date$min),
+                        format = "%H-%M")
+intervals <- unique(intervals)
+qplot(x = intervals, 
+      y = average_over_days, 
+      geom = "line", xlab = "Time Interval", ylab = "Average steps over days")+
+      scale_x_datetime(labels = date_format("%H:00"))
+```
 
+```{r find_interval}
+pre_position <- as.POSIXlt(intervals[which.max(average_over_days)])
+max_steps <- paste0(pre_position$hour,":",pre_position$min)
+```
 
+Maximum number of steps observed across interval `r max_steps`.
 
 ## Imputing missing values
+```{r missed}
+na_rows <- sum(is.na(doc$steps))
+```
 
+There are `r na_rows` missed values.
 
+Fix it using mean values of corresponding 5-min intervals.
 
+```{r fix_set}
+fix_data <- work_data
+fix_data$steps[is.na(fix_data$steps)] <- average_over_days_matrix[(fix_data$date[which(is.na(fix_data$steps))]$min/5)+1,fix_data$date[which(is.na(fix_data$steps))]$hour]
+```
+
+```{r computemean_fix}
+total_steps_per_day_fix <- tapply(X = doc$steps, INDEX = doc$date, FUN = sum) 
+```
+
+```{r histogram_fix}
+qplot(x = total_steps_per_day_fix, binwidth = 500, xlab = "Total steps per day")
+```
+
+```{r report_fix}
+steps_mean_fix <- mean(total_steps_per_day_fix)
+steps_median_fix <- median(total_steps_per_day_fix)
+```
 ## Are there differences in activity patterns between weekdays and weekends?
+```{r week_patern}
+if_else_weekend <- function(date){
+    isweekend <- ifelse(weekdays(as.Date(date))=="Saturday"|weekdays(as.Date(date))=="Sunday",
+                        yes = "weekend", 
+                        no = "weekday")
+    return(as.factor(isweekend))
+}
+doc_fix <- cbind(doc_fix, if_else_weekend(doc_fix$date))
+names(doc_fix)[4] <- "isweekend"
+```
+
+```{r plot_week_patern}
+
+```
