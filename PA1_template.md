@@ -8,7 +8,7 @@ doc <- read.csv(unzip("activity.zip"))
 ```
 
 Change settings of loclization (personal issue).
-Load nexessary libraries.
+Load necessary libraries.
 Unify form of interval quantity.
 Make some transformations of quantities that hold date info.
 
@@ -67,7 +67,7 @@ steps_mean <- as.character(mean(total_steps_per_day))
 steps_median <- as.character(median(total_steps_per_day))
 ```
 
-Mean of steps is 9354.22950819672 and median of steps is 10395.
+<b>Mean</b> of steps is <font color = red>9354.22950819672</font> and <b>median</b> of steps is <font color = red>10395</font>.
 
 ## What is the average daily activity pattern?
 
@@ -75,7 +75,7 @@ Split data due to minutes and hours (disregard days, etc.).
 Calculate mean over each group.
 Drop dimensions of obtained matrix (vector now, which we can pass as an argument).
 Extract time intervals over which we make calculations in few previous steps. 
-Make a plot (take care of appropriate x-axis scaling).
+Make a plot (take care of appropriate x-axis scaling). <b>Note: default scaling gives incorrect representation due to jumps of the form xx59 -> (xx+1)00 (looks like relatively long (respectively to x-axis) straight segments on the graphs).</b>
 
 
 ```r
@@ -98,9 +98,9 @@ qplot(x = intervals,
 
 ![](PA1_template_files/figure-html/time_series_plot-1.png) 
 
-Find index of maximum of the mean over all days of steps. 
-Use this index to find correspondibg time interval.
-Show only meaningful information (hours, minutes) disregard defaults (year, etc.)
+Find index of maximum of mean of the steps over all days. 
+Use this index to find corresponding time interval.
+Show only meaningful information (hours, minutes), disregard defaults (year, etc.)
 
 
 ```r
@@ -108,7 +108,7 @@ pre_position <- as.POSIXlt(intervals[which.max(average_over_days)])
 max_steps <- paste0(pre_position$hour,":",pre_position$min)
 ```
 
-Maximum number of steps observed across interval 8:35.
+<b>Maximum number of steps</b> observed across interval <font color = red>8:35</font>.
 
 ## Imputing missing values
 
@@ -116,11 +116,9 @@ Maximum number of steps observed across interval 8:35.
 na_rows <- sum(is.na(doc$steps))
 ```
 
-There are 2304 missed values.
+There are <font color = red>2304</font> <b>missed values</b>.
 
-Fix it using mean values of corresponding 5-min intervals.
-The best way to understand way of replacement is actually to have a glimpse at 
-average_over_days_matrix (socalled "rownames" and "colnames")
+Fix them using mean values (over all days) of respective 5-min intervals calculated above. (e.g. if we don't have data for 6:55-7:00 day 1, then we take mean over interval 6:55-7:00 of all days and assign obtained value to 6:55-7:00 day 1. Note: while calculating mean we count na's as zeros).
 
 
 ```r
@@ -135,7 +133,7 @@ for(i in 1:length(fix_data$steps)){
 }
 ```
 
-The same as for previous mean calculation but with fixed data.
+The same calculations as for previous chapter, but with fixed na's in data.
 
 
 ```r
@@ -159,7 +157,7 @@ steps_mean_fix <- as.character(mean(total_steps_per_day_fix))
 steps_median_fix <- as.character(median(total_steps_per_day_fix))
 ```
 
-Mean of steps is 10766.1886792453 and median of steps is 10766.1886792453.
+<b>Mean</b> of steps is <font color = red>10766.1886792453</font> and <b>median</b> of steps is <font color = red>10766.1886792453</font>.
 Difference is obvious and reasonable. Na's used to be counted as zeros, now they counted as respective mean values over 5-min intervals (Thats why mean and median over day increased). 
 
 ## Are there differences in activity patterns between weekdays and weekends?
@@ -181,7 +179,7 @@ fix_data <- mutate(fix_data, weekend = isweekend)
 Split data over group of weekdays/weekends, minutes and hours.
 Calculate mean over each subgroup.
 Separate groups of weekdays and weekends and drop dimensions of matrixes for each of them.
-Make some temporary quantities just to make it possible to pass all necessary data into qplot function. Two graphics this time (based on weekdays/weekends groups). Type of time intervla scaling the same as previously.
+Make some temporary quantities just to make it possible to pass all necessary data into qplot function. Two graphics this time (based on weekdays/weekends groups). Type of the time interval scaling the same as previously.
 
 
 ```r
@@ -207,4 +205,4 @@ qplot(x = rep(intervals,2),
 
 ![](PA1_template_files/figure-html/plot_week_patern-1.png) 
 
-Let see what we got. Peoples sleep longer on weekends, but have more movement during the day (as expected ). 
+Plots support hypothesis that people sleep longer, but have more movement during the day on weekends (as expected from typical work hours).
